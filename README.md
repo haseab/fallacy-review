@@ -1,4 +1,4 @@
-# fallacy-review
+# fallacy.review
 
 Chrome extension that automatically highlights logical fallacies on Twitter
 
