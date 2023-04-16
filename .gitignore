@@ -1,0 +1,56 @@
+# Ignore build artifacts
+build/
+dist/
+node_modules/
+local/
+next-env.d.ts
+.next/
+# Ignore local environment files
+.env
+.env.local
+.env.*.local
+
+# Ignore log files
+*.log
+
+# Ignore OS and editor files
+.DS_Store
+Thumbs.db
+*.swp
+*.bak
+*.tmp
+*.exe
+*.dll
+*.pdb
+*.class
+
+# Ignore dependencies and configuration files
+/.idea
+/.vscode
+/.venv
+/.sass-cache
+/.sonar
+/bower_components
+/cache
+/coverage
+/gradle
+/node_modules
+/npm-debug.log*
+/yarn-debug.log*
+/yarn-error.log*
+/.yarn-integrity
+
+# Ignore compiled binaries and executables
+/bin
+/obj
+/out
+/release
+/Debug
+/Release
+/x64
+/x86
+
+# Ignore package manager specific files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
