@@ -1,2 +1,7 @@
 # fallacy-review
-chrome extension that automatically highlights logical fallacies on Twitter
+
+Chrome extension that automatically highlights logical fallacies on Twitter
+
+## Demo
+
+![fallacy.review Twitter Demo](/assets/fallacy-review-demo.gif)
