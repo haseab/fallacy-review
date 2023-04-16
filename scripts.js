@@ -1,7 +1,11 @@
 // @ts-check
-
-const openAiRequest = async (mainMessageList) => {
-  const token = "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";
+let token = "placeholder";
+const getApiKey = async () => {
+  chrome.storage.sync.get(["openAiApiKey"], (result) => {
+    token = result.openAiApiKey;
+  });
+};
+const openAiRequest = async (mainMessageList, token) => {
   const headers = { Authorization: `Bearer ${token}` };
   try {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -24,7 +28,7 @@ const openAiRequest = async (mainMessageList) => {
   }
 };
 
-const deepFallacyCheck = async (rank1Prompt, mainMessageList) => {
+const deepFallacyCheck = async (rank1Prompt, mainMessageList, token) => {
   if (rank1Prompt === "") {
     return;
   }
@@ -37,7 +41,7 @@ const deepFallacyCheck = async (rank1Prompt, mainMessageList) => {
 
   mainMessageList.push({ role: "user", content: prompt });
 
-  const flaggedString = await openAiRequest(mainMessageList);
+  const flaggedString = await openAiRequest(mainMessageList, token);
   console.log(flaggedString);
   mainMessageList.push({ role: "assistant", content: flaggedString });
   console.log(mainMessageList);
@@ -66,7 +70,7 @@ const stringToObject = (rankingsString, delimiter) => {
   return rankingsObject;
 };
 
-const quickFallacyCheck = async (tweetsObject) => {
+const quickFallacyCheck = async (tweetsObject, token) => {
   const systemInstruction = `Your goal is to find logical fallacies in Tweets.
 `;
   const instructions1 = `Go through each of the tweets and follow the following instructions:
@@ -91,7 +95,7 @@ const quickFallacyCheck = async (tweetsObject) => {
   ];
   // return data;
 
-  const rankingsString = await openAiRequest(mainMessageList);
+  const rankingsString = await openAiRequest(mainMessageList, token);
   const rankingsDict = stringToObject(rankingsString, ",");
   return [rankingsDict, mainMessageList];
 };
@@ -181,13 +185,16 @@ function getRank1Prompt(rankingsDict) {
   });
   return text;
 }
-const highlightSentences = async (tweetsObject) => {
-  const [rankingsDict, mainMessageList] = await quickFallacyCheck(tweetsObject);
+const highlightSentences = async (tweetsObject, token) => {
+  const [rankingsDict, mainMessageList] = await quickFallacyCheck(
+    tweetsObject,
+    token
+  );
   console.log(rankingsDict);
   const rank1Prompt = getRank1Prompt(rankingsDict);
-
+  console.log("got before deep fallacy checking");
   const [tweetExplanationsDict, cpuResult] = await Promise.all([
-    deepFallacyCheck(rank1Prompt, mainMessageList),
+    deepFallacyCheck(rank1Prompt, mainMessageList, token),
     initialHighlight(rankingsDict, tweetsObject),
   ]);
   if (rank1Prompt === "") {
@@ -244,17 +251,50 @@ const getTweets = async () => {
 };
 
 const trackedTweets = {};
+let isEnabled = false;
 
-(async () => {
-  while (true) {
-    // console.log(trackedTweets);
-    const tweetsObject = await getTweets();
-    console.log(tweetsObject);
-    if (Object.keys(tweetsObject).length === 0) {
-      await new Promise((r) => setTimeout(r, 50));
-      continue;
-    }
-    await highlightSentences(tweetsObject);
-    await new Promise((r) => setTimeout(r, 50));
+// chrome.storage.sync.clear(() => {
+//   console.log("cleared");
+// });
+
+// Listen for messages from the popup script
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log("listening...");
+  if (typeof request !== "object" || !("isEnabled" in request)) {
+    return;
   }
-})();
+
+  isEnabled = request.isEnabled;
+  if (isEnabled) {
+    mainLoop();
+  } else {
+    console.log("main loop stopped...");
+  }
+});
+
+const mainLoop = async (token) => {
+  console.log("main loop running...");
+  if (!isEnabled) {
+    return;
+  }
+
+  const tweetsObject = await getTweets();
+  console.log(tweetsObject);
+  if (Object.keys(tweetsObject).length === 0) {
+    await new Promise((r) => setTimeout(r, 50));
+  } else {
+    await highlightSentences(tweetsObject, token);
+  }
+
+  // Set a delay before the next iteration and recursively call the mainLoop function
+  setTimeout(mainLoop, 75);
+};
+
+// Initialize by checking the extension state in local storage or sync storage
+chrome.storage.sync.get(["isEnabled", "openAiApiKey"], function (data) {
+  console.log(data.isEnabled);
+  if (data.isEnabled) {
+    isEnabled = true;
+    mainLoop(data.openAiApiKey);
+  }
+});

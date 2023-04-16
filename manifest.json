@@ -1,12 +1,24 @@
 {
-  "manifest_version": 3,
+  "manifest_version": 2,
   "name": "Fallacy Review",
   "version": "0.1.0",
+  "description": "Automatically highlight logical fallacies on Twitter",
+  "permissions": ["storage", "tabs", "activeTab"],
   "content_scripts": [
     {
       "matches": ["https://twitter.com/*"],
       "js": ["scripts.js"],
       "css": ["style.css"]
     }
-  ]
+  ],
+  "icons": {
+    "16": "assets/16x16px.png",
+    "48": "assets/48x48px.png",
+    "128": "assets/128x128px.png"
+  },
+  "browser_action": {
+    "default_icon": "/assets/48x48px.png",
+    "default_popup": "popup.html",
+    "default_title": "Toggle My Extension"
+  }
 }

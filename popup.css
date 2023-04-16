@@ -1,0 +1,32 @@
+/* add a big button styling */
+.button {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  display: block;
+  margin: 0 auto;
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.centered {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  text-align: center;
+  display: block;
+  margin: 0 auto;
+}
+
+.mui-textfield input {
+  width: 150px;
+}
+
+.mui-btn {
+  font-size: 12px;
+  padding: 5px 10px;
+}
