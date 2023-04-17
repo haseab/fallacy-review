@@ -7,4 +7,4 @@ Chrome extension that automatically highlights logical fallacies on Twitter
 3. Turn on Developer Mode (Top Right)
 4. Load Unpacked
 5. Choose the downloaded folder
-6. Watch demo on https:fallacy.review
+6. Watch demo on [fallacy review](https://fallacy.review)
