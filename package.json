@@ -5,8 +5,5 @@
   "license": "MIT",
   "type": "module",
   "dependencies": {},
-  "devDependencies": {
-    "@types/node": "18.15.11",
-    "@types/react": "^18.0.32"
-  }
+  "devDependencies": {}
 }
