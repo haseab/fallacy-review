@@ -22,21 +22,29 @@ const openAiRequest = async (mainMessageList, token) => {
   }
 };
 
-const deepFallacyCheck = async (rank1Prompt, mainMessageList, token) => {
+const tweetNumberToString = (rank1Prompt) => {
+  const rank1PromptList = rank1Prompt.split("\n").map((element) => {
+    return element.split(":", 2);
+  });
+  const result = rank1PromptList.map((subArray) => subArray[0]);
+  return result.join(", ");
+};
+const deepFallacyCheck = async (rank1Prompt, mainMessageList, token, debug) => {
   if (rank1Prompt === "") {
     return;
   }
-  const tweetNumber = rank1Prompt.split(":", 2)[0];
-  const instructions2 = `Output only ${tweetNumber} and selected in the following format:`;
-  const instructions3 = `Example: ${tweetNumber}: False Dilemma - Assumes that the only two options are either solving a problem by oneself or looking at the back of the book of life \\n`;
+  const tweetNumberString = tweetNumberToString(rank1Prompt);
+  const instructions2 = `Output only ${tweetNumberString}in the following format:`;
+  // const instructions3 = `Example: ${tweetNumber}: False Dilemma - Assumes that the only two options are either solving a problem by oneself or looking at the back of the book of life \\n`;
 
-  let prompt = instructions2 + "\n" + rank1Prompt + "\n" + instructions3;
-  console.log(prompt);
+  let prompt = instructions2 + "\n" + rank1Prompt + "\n";
+  debug ? console.log(prompt) : null;
 
   mainMessageList.push({ role: "user", content: prompt });
 
   const flaggedString = await openAiRequest(mainMessageList, token);
   mainMessageList.push({ role: "assistant", content: flaggedString });
+  debug ? console.log(flaggedString) : null;
   const flaggedList = flaggedString
     .split("\n")
     .filter((tweet) => {
@@ -47,7 +55,7 @@ const deepFallacyCheck = async (rank1Prompt, mainMessageList, token) => {
     });
   const flaggedObject = Object.fromEntries(flaggedList);
 
-  console.log(flaggedObject);
+  debug ? console.log(flaggedObject) : null;
   return flaggedObject;
 };
 
@@ -62,7 +70,7 @@ const stringToObject = (rankingsString, delimiter) => {
   return rankingsObject;
 };
 
-const quickFallacyCheck = async (tweetsObject, token) => {
+const quickFallacyCheck = async (tweetsObject, token, debug) => {
   const systemInstruction = `Your goal is to find logical fallacies in Tweets.
 `;
   const instructions1 = `Go through each of the tweets and follow the following instructions:
@@ -79,7 +87,7 @@ const quickFallacyCheck = async (tweetsObject, token) => {
   `;
 
   let prompt = instructions1 + "\n" + JSON.stringify(tweetsObject);
-  console.log(prompt);
+  debug ? console.log(prompt) : null;
 
   let mainMessageList = [
     { role: "system", content: systemInstruction },
@@ -92,7 +100,7 @@ const quickFallacyCheck = async (tweetsObject, token) => {
   return [rankingsDict, mainMessageList];
 };
 
-const highlightTextNodes = (node, flagged, explanation) => {
+const highlightTextNodes = (node, flagged, explanation, debug) => {
   const mapDict = {
     "Rank 1": "Absolutely a Fallacy. Explanation Loading...",
     "Rank 2": "Suspected Fallacy, but unclear argument. Loading...",
@@ -119,8 +127,8 @@ const highlightTextNodes = (node, flagged, explanation) => {
       span.style.color = "black";
 
       if (explanation[0].length > 10) {
-        console.log("highlighting");
-        console.log(uniqueId);
+        console.log("Fallacy found! highlighting...");
+        debug ? console.log(uniqueId) : null;
         const oldPreDiv = document.querySelector("#pre-div" + uniqueId);
         const oldSpan = document.querySelector("#span" + uniqueId);
         const oldTooltip = document.querySelector("#tooltip" + uniqueId);
@@ -146,11 +154,15 @@ const highlightTextNodes = (node, flagged, explanation) => {
     }
   }
 };
-const highlightLoop = (flaggedObject) => {
+const highlightLoop = (flaggedObject, debug) => {
   flaggedObject.forEach((flagged) => {
-    // console.log(flagged);
     document.querySelectorAll('[data-testid="tweetText"]').forEach((node) => {
-      highlightTextNodes(node, Object.keys(flagged)[0], Object.values(flagged));
+      highlightTextNodes(
+        node,
+        Object.keys(flagged)[0],
+        Object.values(flagged),
+        debug
+      );
     });
   });
 };
@@ -161,9 +173,9 @@ const joinOnTweetName = (rankingsDict, tweetsObject) => {
     return dic;
   });
 };
-const initialHighlight = async (rankingsDict, tweetsObject) => {
+const initialHighlight = async (rankingsDict, tweetsObject, debug) => {
   const flaggedObject = joinOnTweetName(rankingsDict, tweetsObject);
-  highlightLoop(flaggedObject);
+  highlightLoop(flaggedObject, debug);
 };
 
 function getRank1Prompt(rankingsDict) {
@@ -177,23 +189,23 @@ function getRank1Prompt(rankingsDict) {
   });
   return text;
 }
-const highlightSentences = async (tweetsObject, token) => {
+const highlightSentences = async (tweetsObject, token, debug) => {
   const [rankingsDict, mainMessageList] = await quickFallacyCheck(
     tweetsObject,
-    token
+    token,
+    debug
   );
-  console.log(rankingsDict);
+  debug ? console.log(rankingsDict) : null;
   const rank1Prompt = getRank1Prompt(rankingsDict);
-  console.log("got before deep fallacy checking");
   const [tweetExplanationsDict, cpuResult] = await Promise.all([
-    deepFallacyCheck(rank1Prompt, mainMessageList, token),
-    initialHighlight(rankingsDict, tweetsObject),
+    deepFallacyCheck(rank1Prompt, mainMessageList, token, debug),
+    initialHighlight(rankingsDict, tweetsObject, debug),
   ]);
   if (rank1Prompt === "") {
     return;
   }
   const flaggedObject = joinOnTweetName(tweetExplanationsDict, tweetsObject);
-  console.log(flaggedObject);
+  debug ? console.log(flaggedObject) : null;
   highlightLoop(flaggedObject);
 };
 
@@ -204,7 +216,7 @@ const getUniqueNumber = (text) => {
 const waitForTweets = async () => {
   let tweets = [];
   while (tweets.length == 0) {
-    console.log("no more tweets found, trying again");
+    // console.log("no more tweets found, trying again");
     // @ts-ignore
     tweets = Array.from(document.querySelectorAll('[data-testid="tweetText"]'));
     await new Promise((r) => setTimeout(r, 1000));
@@ -225,7 +237,6 @@ const getTweets = async () => {
         trackedTweets[uniqueId] !== undefined &&
         tweet.style.backgroundColor != "yellow"
       ) {
-        console.log("made it");
         const toolTipContainer = trackedTweets[uniqueId].parentNode;
         tweet.parentNode.replaceChild(toolTipContainer, tweet);
         toolTipContainer.parentNode.style.paddingTop = "30px";
@@ -251,7 +262,7 @@ let isEnabled = false;
 
 // Listen for messages from the popup script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log("listening...");
+  // console.log("listening...");
   if (typeof request !== "object" || !("isEnabled" in request)) {
     return;
   }
@@ -262,33 +273,33 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       mainLoop(data.openAiApiKey);
     });
   } else {
-    console.log("main loop stopped...");
+    console.log("Extension stopped...");
   }
 });
 
-const mainLoop = async (token) => {
-  console.log("main loop running...");
+const mainLoop = async (token, debug) => {
+  debug ? console.log("Checking...") : null;
   if (!isEnabled) {
     return;
   }
 
   const tweetsObject = await getTweets();
-  console.log(tweetsObject);
+  debug ? console.log(tweetsObject) : null;
   if (Object.keys(tweetsObject).length === 0) {
     await new Promise((r) => setTimeout(r, 50));
   } else {
-    await highlightSentences(tweetsObject, token);
+    await highlightSentences(tweetsObject, token, debug);
   }
 
   // Set a delay before the next iteration and recursively call the mainLoop function
-  setTimeout(mainLoop, 75, token);
+  setTimeout(mainLoop, 75, token, debug);
 };
 
 // Initialize by checking the extension state in local storage or sync storage
 chrome.storage.sync.get(["isEnabled", "openAiApiKey"], async (data) => {
-  console.log(data.isEnabled);
+  const debug = true;
   if (data.isEnabled) {
     isEnabled = true;
-    mainLoop(data.openAiApiKey);
+    mainLoop(data.openAiApiKey, debug);
   }
 });
