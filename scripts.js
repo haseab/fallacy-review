@@ -1,10 +1,4 @@
 // @ts-check
-let token = "placeholder";
-const getApiKey = async () => {
-  chrome.storage.sync.get(["openAiApiKey"], (result) => {
-    token = result.openAiApiKey;
-  });
-};
 const openAiRequest = async (mainMessageList, token) => {
   const headers = { Authorization: `Bearer ${token}` };
   try {
@@ -42,9 +36,7 @@ const deepFallacyCheck = async (rank1Prompt, mainMessageList, token) => {
   mainMessageList.push({ role: "user", content: prompt });
 
   const flaggedString = await openAiRequest(mainMessageList, token);
-  console.log(flaggedString);
   mainMessageList.push({ role: "assistant", content: flaggedString });
-  console.log(mainMessageList);
   const flaggedList = flaggedString
     .split("\n")
     .filter((tweet) => {
@@ -266,7 +258,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   isEnabled = request.isEnabled;
   if (isEnabled) {
-    mainLoop();
+    chrome.storage.sync.get(["openAiApiKey"], async (data) => {
+      mainLoop(data.openAiApiKey);
+    });
   } else {
     console.log("main loop stopped...");
   }
@@ -287,11 +281,11 @@ const mainLoop = async (token) => {
   }
 
   // Set a delay before the next iteration and recursively call the mainLoop function
-  setTimeout(mainLoop, 75);
+  setTimeout(mainLoop, 75, token);
 };
 
 // Initialize by checking the extension state in local storage or sync storage
-chrome.storage.sync.get(["isEnabled", "openAiApiKey"], function (data) {
+chrome.storage.sync.get(["isEnabled", "openAiApiKey"], async (data) => {
   console.log(data.isEnabled);
   if (data.isEnabled) {
     isEnabled = true;
