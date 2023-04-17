@@ -1,5 +1,6 @@
 # fallacy.review
 
+## NOTE: THIS PRODUCT IS STILL IN VERY EARLY DEVELOPMENT
 Chrome extension that automatically highlights logical fallacies on Twitter
 
 1. Clone repo or download folder
