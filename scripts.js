@@ -297,7 +297,7 @@ const mainLoop = async (token, debug) => {
 
 // Initialize by checking the extension state in local storage or sync storage
 chrome.storage.sync.get(["isEnabled", "openAiApiKey"], async (data) => {
-  const debug = true;
+  const debug = false;
   if (data.isEnabled) {
     isEnabled = true;
     mainLoop(data.openAiApiKey, debug);
