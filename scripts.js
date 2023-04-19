@@ -1,4 +1,7 @@
 // @ts-check
+const debugPrint = (debug, log) => {
+  return debug ? console.log(log) : null;
+};
 const openAiRequest = async (mainMessageList, token) => {
   const headers = { Authorization: `Bearer ${token}` };
   try {
@@ -9,6 +12,7 @@ const openAiRequest = async (mainMessageList, token) => {
         ...headers,
       },
       body: JSON.stringify({
+        // model: "gpt-3.5-turbo",
         model: "gpt-3.5-turbo",
         messages: mainMessageList,
         temperature: 0,
@@ -38,13 +42,13 @@ const deepFallacyCheck = async (rank1Prompt, mainMessageList, token, debug) => {
   // const instructions3 = `Example: ${tweetNumber}: False Dilemma - Assumes that the only two options are either solving a problem by oneself or looking at the back of the book of life \\n`;
 
   let prompt = instructions2 + "\n" + rank1Prompt + "\n";
-  debug ? console.log(prompt) : null;
+  debugPrint(debug, prompt);
 
   mainMessageList.push({ role: "user", content: prompt });
 
   const flaggedString = await openAiRequest(mainMessageList, token);
   mainMessageList.push({ role: "assistant", content: flaggedString });
-  debug ? console.log(flaggedString) : null;
+  debugPrint(debug, flaggedString);
   const flaggedList = flaggedString
     .split("\n")
     .filter((tweet) => {
@@ -53,10 +57,10 @@ const deepFallacyCheck = async (rank1Prompt, mainMessageList, token, debug) => {
     .map((explanation) => {
       return explanation.split(":", 2);
     });
-  const flaggedObject = Object.fromEntries(flaggedList);
+  const tweetExplanationsDict = Object.fromEntries(flaggedList);
 
-  debug ? console.log(flaggedObject) : null;
-  return flaggedObject;
+  debugPrint(debug, tweetExplanationsDict);
+  return tweetExplanationsDict;
 };
 
 const stringToObject = (rankingsString, delimiter) => {
@@ -64,8 +68,8 @@ const stringToObject = (rankingsString, delimiter) => {
   const rankingsObject = {};
   const rankingsArray = rankingsString.split(delimiter);
   rankingsArray.forEach((tweet) => {
-    const tweetArray = tweet.split(":");
-    rankingsObject[tweetArray[0].trim()] = tweetArray[1].trim();
+    const tweetArray = tweet.split(":", 2);
+    rankingsObject[tweetArray[0].trim()] = parseInt(tweetArray[1]);
   });
   return rankingsObject;
 };
@@ -73,21 +77,36 @@ const stringToObject = (rankingsString, delimiter) => {
 const quickFallacyCheck = async (tweetsObject, token, debug) => {
   const systemInstruction = `Your goal is to find logical fallacies in Tweets.
 `;
-  const instructions1 = `Go through each of the tweets and follow the following instructions:
-  Assign the Tweet as Rank 1 if there is absolutely certain that the tweet has a statement which is a Logical Fallacy. 
-  Assign the Tweet as Rank 2 if there is a statement in the tweet that is a suspected Fallacy, but unclear what the intention of the argument is.
-  Assign the Tweet as Rank 3 if there is a statement in the tweet that may be a Fallacy but needs more context.
-  Assign the Tweet as Rank 4 if it there is no sign of any Logical Fallacy in the tweet.
-  
-  The output SYNTAX should be EXACTLY the same as the example below (include commas, don't include periods). 
-  
-  Tweet X: Rank X, Tweet X: Rank X, Tweet X: Rank X, Tweet X: Rank X, Tweet X: Rank X
-  
-  TWEETS (all text below):
-  `;
 
-  let prompt = instructions1 + "\n" + JSON.stringify(tweetsObject);
-  debug ? console.log(prompt) : null;
+  const newInstruction = `## SYSTEM:
+  Using the knowledge of David Kelley from the book "The Art of Reasoning". Your goal is to analyze tweets and assess whether an argument is logically flawed. 
+  
+  ## INSTRUCTIONS:
+  Grade each tweet on a scale of 0-100% purely on logical coherence and NOT on factual accuracy.
+  
+  ## OUTPUT
+  The output SYNTAX should be EXACTLY the same as the "## EXAMPLE" below (include commas, don't include periods). 
+  
+  ## EXAMPLE
+  Tweet X: X%, Tweet X: X%, Tweet X:  X%, Tweet X: X%, Tweet X: X%
+    
+  ## TWEETS (all text below):`;
+
+  // const instructions1 = `Go through each of the tweets and follow the following instructions:
+  // Assign the Tweet as Rank 1 if there is absolutely certain that the tweet has a statement which is a Logical Fallacy.
+  // Assign the Tweet as Rank 2 if there is a statement in the tweet that is a suspected Fallacy, but unclear what the intention of the argument is.
+  // Assign the Tweet as Rank 3 if there is a statement in the tweet that may be a Fallacy but needs more context.
+  // Assign the Tweet as Rank 4 if it there is no sign of any Logical Fallacy in the tweet.
+
+  // The output SYNTAX should be EXACTLY the same as the example below (include commas, don't include periods).
+
+  // Tweet X: Rank X, Tweet X: Rank X, Tweet X: Rank X, Tweet X: Rank X, Tweet X: Rank X
+
+  // TWEETS (all text below):
+  // `;
+
+  let prompt = newInstruction + "\n" + JSON.stringify(tweetsObject);
+  debugPrint(debug, prompt);
 
   let mainMessageList = [
     { role: "system", content: systemInstruction },
@@ -96,19 +115,12 @@ const quickFallacyCheck = async (tweetsObject, token, debug) => {
   // return data;
 
   const rankingsString = await openAiRequest(mainMessageList, token);
-  const rankingsDict = stringToObject(rankingsString, ",");
-  return [rankingsDict, mainMessageList];
+  const rankingsObject = stringToObject(rankingsString, ",");
+  return [rankingsObject, mainMessageList];
 };
 
 const highlightTextNodes = (node, flagged, explanation, debug) => {
-  const mapDict = {
-    "Rank 1": "Absolutely a Fallacy. Explanation Loading...",
-    "Rank 2": "Suspected Fallacy, but unclear argument. Loading...",
-    "Rank 3": "Maybe a Fallacy but need more context. Loading...",
-    "Rank 4": "No sign of Fallacy",
-  };
-
-  if (explanation.includes("Rank 1") || explanation[0].length > 10) {
+  if (typeof explanation == "number" || explanation[0].length > 10) {
     if (node.innerText.includes(flagged)) {
       // Create a unique Id given the flagged and explanation
       const uniqueId = `${getUniqueNumber(flagged)}`;
@@ -128,7 +140,7 @@ const highlightTextNodes = (node, flagged, explanation, debug) => {
 
       if (explanation[0].length > 10) {
         console.log("Fallacy found! highlighting...");
-        debug ? console.log(uniqueId) : null;
+        debugPrint(debug, uniqueId);
         const oldPreDiv = document.querySelector("#pre-div" + uniqueId);
         const oldSpan = document.querySelector("#span" + uniqueId);
         const oldTooltip = document.querySelector("#tooltip" + uniqueId);
@@ -143,7 +155,7 @@ const highlightTextNodes = (node, flagged, explanation, debug) => {
         const tooltip = document.createElement("div");
         tooltip.className = "tooltip";
         tooltip.setAttribute("id", "tooltip" + uniqueId);
-        tooltip.textContent = mapDict[explanation];
+        tooltip.textContent = "Potential Fallacy! Explanation Loading...";
         node.parentNode.replaceChild(preDiv, node);
         preDiv.parentNode.appendChild(tooltipContainer);
         tooltipContainer.appendChild(span);
@@ -154,33 +166,33 @@ const highlightTextNodes = (node, flagged, explanation, debug) => {
     }
   }
 };
-const highlightLoop = (flaggedObject, debug) => {
-  flaggedObject.forEach((flagged) => {
+const highlightLoop = (arrOfObjects, debug) => {
+  arrOfObjects.forEach((flaggedObject) => {
     document.querySelectorAll('[data-testid="tweetText"]').forEach((node) => {
       highlightTextNodes(
         node,
-        Object.keys(flagged)[0],
-        Object.values(flagged),
+        Object.keys(flaggedObject)[0], // returns the tweet for the flaggedObject.
+        Object.values(flaggedObject), // returns the explanation for the flaggedObject.
         debug
       );
     });
   });
 };
-const joinOnTweetName = (rankingsDict, tweetsObject) => {
-  return Object.entries(rankingsDict).map(([tweet_key, rank]) => {
+const joinOnTweetName = (rankingsObject, tweetsObject) => {
+  return Object.entries(rankingsObject).map(([tweet_key, score]) => {
     let dic = {};
-    dic[tweetsObject[tweet_key]] = rank;
+    dic[tweetsObject[tweet_key]] = score;
     return dic;
   });
 };
-const initialHighlight = async (rankingsDict, tweetsObject, debug) => {
-  const flaggedObject = joinOnTweetName(rankingsDict, tweetsObject);
-  highlightLoop(flaggedObject, debug);
+const initialHighlight = async (rankingsObject, tweetsObject, debug) => {
+  const arrOfObjects = joinOnTweetName(rankingsObject, tweetsObject);
+  highlightLoop(arrOfObjects, debug);
 };
 
-function getRank1Prompt(rankingsDict) {
-  const rankOneTweets = Object.entries(rankingsDict)
-    .filter(([tweet, rank]) => rank === "Rank 1")
+function getRank1Prompt(rankingsObject) {
+  const rankOneTweets = Object.entries(rankingsObject)
+    .filter(([tweet, score]) => score <= 30)
     .map(([tweet, rank]) => tweet);
   let text = "";
   rankOneTweets.forEach((tweet) => {
@@ -190,23 +202,23 @@ function getRank1Prompt(rankingsDict) {
   return text;
 }
 const highlightSentences = async (tweetsObject, token, debug) => {
-  const [rankingsDict, mainMessageList] = await quickFallacyCheck(
+  const [rankingsObject, mainMessageList] = await quickFallacyCheck(
     tweetsObject,
     token,
     debug
   );
-  debug ? console.log(rankingsDict) : null;
-  const rank1Prompt = getRank1Prompt(rankingsDict);
+  debugPrint(debug, rankingsObject);
+  const rank1Prompt = getRank1Prompt(rankingsObject);
   const [tweetExplanationsDict, cpuResult] = await Promise.all([
     deepFallacyCheck(rank1Prompt, mainMessageList, token, debug),
-    initialHighlight(rankingsDict, tweetsObject, debug),
+    initialHighlight(rankingsObject, tweetsObject, debug),
   ]);
   if (rank1Prompt === "") {
     return;
   }
-  const flaggedObject = joinOnTweetName(tweetExplanationsDict, tweetsObject);
-  debug ? console.log(flaggedObject) : null;
-  highlightLoop(flaggedObject);
+  const arrOfObjects = joinOnTweetName(tweetExplanationsDict, tweetsObject);
+  debugPrint(debug, arrOfObjects);
+  highlightLoop(arrOfObjects);
 };
 
 const getUniqueNumber = (text) => {
@@ -278,13 +290,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 const mainLoop = async (token, debug) => {
-  debug ? console.log("Checking...") : null;
+  debugPrint(debug, "Checking for fallacies...");
   if (!isEnabled) {
     return;
   }
 
   const tweetsObject = await getTweets();
-  debug ? console.log(tweetsObject) : null;
+  debugPrint(debug, tweetsObject);
   if (Object.keys(tweetsObject).length === 0) {
     await new Promise((r) => setTimeout(r, 50));
   } else {
@@ -297,7 +309,8 @@ const mainLoop = async (token, debug) => {
 
 // Initialize by checking the extension state in local storage or sync storage
 chrome.storage.sync.get(["isEnabled", "openAiApiKey"], async (data) => {
-  const debug = false;
+  const debug = true;
+  // console.log(data);
   if (data.isEnabled) {
     isEnabled = true;
     mainLoop(data.openAiApiKey, debug);
