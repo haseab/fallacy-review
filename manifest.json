@@ -1,5 +1,5 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "Fallacy Review",
   "version": "0.1.0",
   "description": "Automatically highlight logical fallacies on Twitter",
@@ -16,7 +16,7 @@
     "48": "assets/48x48px.png",
     "128": "assets/128x128px.png"
   },
-  "browser_action": {
+  "action": {
     "default_icon": "/assets/48x48px.png",
     "default_popup": "popup.html",
     "default_title": "Toggle My Extension"
