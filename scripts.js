@@ -235,7 +235,11 @@ const highlightSentences = async (tweetsObject, token, debug, sensitivity) => {
   if (rankOneTweets.length == 0) {
     return;
   }
-  const arrOfObjects = joinOnTweetName(tweetExplanationsDict, tweetsObject);
+  const arrOfObjects = joinOnTweetName(
+    debug,
+    tweetExplanationsDict,
+    tweetsObject
+  );
   debugPrint(debug, "highlightSentences - arrOfObjects:");
   debugPrint(debug, arrOfObjects);
   highlightLoop(arrOfObjects);
