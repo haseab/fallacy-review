@@ -5,14 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>My Extension</title>
     <link rel="stylesheet" href="popup.css" />
-    
   </head>
   <body>
     <!-- Add an image of icon.png with a width of 100px and centered -->
     <img src="assets/128x128px.png" width="100px" class="centered" />
     <h2 class="centered"><a href="https://fallacy.review"></a>fallacy.review</h2>
     <button id="toggleButton" class="button">Turn On</button>
-    <p>Paste your open AI Key (Get it <a href="https://platform.openai.com/account/api-keys" target="_blank"">here</a> )</p>
+    <br/>
+    <div class = "centered">Adjust Sensitivity below</div®>
+    
+    <div class="slider-container">
+      <input type="range" min="0" max="50" step="10" value="0" class="slider" id="sensitivity-slider">
+      <!-- <div class="slider-values">
+        <div class="slider-value">0</div>
+        <div class="slider-value">10</div>
+        <div class="slider-value">20</div>
+        <div class="slider-value">30</div>
+        <div class="slider-value">40</div>
+        <div class="slider-value">50</div>
+      </div> -->
+    </div>
+
+    <br/>
+    <div>Paste your open AI Key (Get it <a href="https://platform.openai.com/account/api-keys" target="_blank""><strong>here</strong></a> )</div>
+    
     <input type="text" id="input-data">
     <button id="submit-button">Submit</button>
     <h3 id="questions">Questions/Problems?</h3>

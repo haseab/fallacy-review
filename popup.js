@@ -4,8 +4,11 @@
 //   );
 // });
 
-chrome.storage.sync.get("isEnabled", function (data) {
+chrome.storage.sync.get(["isEnabled", "sensitivity"], function (data) {
   console.log(data);
+  sensitivitySlider = document.getElementById("sensitivity-slider");
+  sensitivity = parseInt(data.sensitivity);
+  sensitivitySlider.value = sensitivity;
   if (data.isEnabled) {
     isEnabled = true;
     toggleButton.textContent = "Turn Off";
@@ -15,8 +18,18 @@ chrome.storage.sync.get("isEnabled", function (data) {
 });
 
 document.addEventListener("DOMContentLoaded", function () {
-  const toggleButton = document.getElementById("toggleButton");
+  let toggleButton = document.getElementById("toggleButton");
+  let sensitivitySlider = document.getElementById("sensitivity-slider");
   isEnabled = true ? toggleButton.textContent === "Turn Off" : false;
+
+  //add a listener to when the sensitivity slider is changed
+  sensitivitySlider.addEventListener("change", (e) => {
+    chrome.storage.sync.set({ sensitivity: e.target.value });
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      chrome.tabs.sendMessage(tabs[0].id, { sensitivity: e.target.value });
+    });
+    console.log(`changed sensitivity to ${e.target.value}`);
+  });
 
   toggleButton.addEventListener("click", function () {
     console.log("button clicked");
@@ -49,8 +62,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Save the extension state to local storage or sync storage
         chrome.storage.sync.set({ isEnabled: isEnabled });
-
-        // Send a message to the content script using chrome.tabs.sendMessage
         chrome.tabs.query(
           { active: true, currentWindow: true },
           function (tabs) {
