@@ -122,8 +122,8 @@ Grade each tweet on a scale of 0 to 100% (with increments of 5%) for flawed reas
   // return data;
 
   const rankingsString = await openAiRequest(mainMessageList, token);
-  console.log("quickFallacyCheck - rankingsString:");
-  console.log(rankingsString);
+  debugPrint(debug, "quickFallacyCheck - rankingsString:");
+  debugPrint(debug, rankingsString);
   const rankingsObject = stringToObject(rankingsString, ",");
   return [rankingsObject, mainMessageList];
 };
@@ -188,9 +188,9 @@ const highlightLoop = (arrOfObjects, debug) => {
     });
   });
 };
-const joinOnTweetName = (rankOneTweets, tweetsObject) => {
-  console.log("Rank 1 Tweets:");
-  console.log(rankOneTweets);
+const joinOnTweetName = (debug, rankOneTweets, tweetsObject) => {
+  debugPrint(debug, "Rank 1 Tweets:");
+  debugPrint(debug, rankOneTweets);
   return rankOneTweets.map(([tweet_key, score]) => {
     let dic = {};
     dic[tweetsObject[tweet_key]] = score;
@@ -199,7 +199,7 @@ const joinOnTweetName = (rankOneTweets, tweetsObject) => {
 };
 
 const initialHighlight = async (rankOneTweets, tweetsObject, debug) => {
-  const arrOfObjects = joinOnTweetName(rankOneTweets, tweetsObject);
+  const arrOfObjects = joinOnTweetName(debug, rankOneTweets, tweetsObject);
   debugPrint(debug, "initialHighlight - arrOfObjects:");
   debugPrint(debug, arrOfObjects);
   highlightLoop(arrOfObjects, debug);
@@ -285,11 +285,6 @@ const getTweets = async () => {
   return tweetsObject;
 };
 
-const trackedTweets = {};
-let isEnabled = false;
-const debug = false;
-let sensitivity = 30;
-
 // chrome.storage.sync.clear(() => {
 //   console.log("cleared");
 // });
@@ -319,8 +314,8 @@ const mainLoop = async (token, debug, localSensitivity) => {
     return;
   }
   sensitivity = localSensitivity;
-  debugPrint(debug, "Checking for fallacies...");
-  console.log("sensitivity: " + sensitivity);
+  console.log("Checking for fallacies...");
+  debugPrint(debug, "sensitivity: " + sensitivity);
 
   const tweetsObject = await getTweets();
   debugPrint(debug, "mainLoop - tweetsObject:");
@@ -334,6 +329,11 @@ const mainLoop = async (token, debug, localSensitivity) => {
   // Set a delay before the next iteration and recursively call the mainLoop function
   setTimeout(mainLoop, 75, token, debug, sensitivity);
 };
+
+const trackedTweets = {};
+let isEnabled = false;
+const debug = false;
+let sensitivity = 30;
 
 // Initialize by checking the extension state in local storage or sync storage
 chrome.storage.sync.get(
