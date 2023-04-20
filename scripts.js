@@ -287,7 +287,7 @@ const getTweets = async () => {
 
 const trackedTweets = {};
 let isEnabled = false;
-// const debug = true;
+const debug = false;
 let sensitivity = 30;
 
 // chrome.storage.sync.clear(() => {
