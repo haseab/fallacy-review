@@ -3,7 +3,7 @@
   "name": "Fallacy Review",
   "version": "0.1.0",
   "description": "Automatically highlight logical fallacies on Twitter",
-  "permissions": ["storage", "tabs"],
+  "permissions": ["storage"],
   "content_scripts": [
     {
       "matches": ["https://twitter.com/*"],
