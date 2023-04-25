@@ -344,9 +344,12 @@ chrome.storage.sync.get(
   ["isEnabled", "openAiApiKey", "sensitivity"],
   async (data) => {
     // console.log(data);
+    if (data.sensitivity) {
+      sensitivity = parseInt(data.sensitivity);
+    }
     if (data.isEnabled) {
       isEnabled = true;
-      mainLoop(data.openAiApiKey, debug, parseInt(data.sensitivity));
+      mainLoop(data.openAiApiKey, debug, sensitivity);
     }
   }
 );
