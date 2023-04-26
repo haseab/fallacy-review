@@ -19,24 +19,27 @@ const openAiRequest = async (mainMessageList, token) => {
         top_p: 1,
       }),
     });
+    if (response.status === 429) {
+      console.log("Payment Method not detected!");
+      if (
+        window.confirm(
+          `IMPORTANT MESSAGE FROM fallacy.review chrome extension:
+  
+        No Payment Method Detected on OpenAI account.
+  
+        Press OK to be redirected to the OpenAI Payment Method page`
+        )
+      ) {
+        window.location.href =
+          "https://platform.openai.com/account/billing/payment-methods";
+      }
+
+      return;
+    }
     const data = await response.json();
     return data["choices"][0]["message"]["content"];
   } catch (error) {
     console.log(error);
-    if (
-      window.confirm(
-        `IMPORTANT MESSAGE FROM fallacy.review chrome extension:
-
-      No Payment Method Detected on OpenAI account.
-
-      Press OK to be redirected to the OpenAI Payment Method page`
-      )
-    ) {
-      window.location.href =
-        "https://platform.openai.com/account/billing/payment-methods";
-    }
-
-    return;
   }
 };
 
