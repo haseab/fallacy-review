@@ -15,7 +15,7 @@
     <div class = "centered">Adjust Sensitivity below</div®>
     
     <div class="slider-container">
-      <input type="range" min="0" max="50" step="10" value="0" class="slider" id="sensitivity-slider">
+      <input type="range" min="0" max="50" step="5" value="0" class="slider" id="sensitivity-slider">
       <!-- <div class="slider-values">
         <div class="slider-value">0</div>
         <div class="slider-value">10</div>
@@ -25,13 +25,12 @@
         <div class="slider-value">50</div>
       </div> -->
     </div>
-    
     <hr/>
     <h3 class="centered">New User Info 👇</h3>
-    <div><strong>Step 1. </strong>Add Credit Card to OpenAI (click <a href="https://platform.openai.com/account/billing/payment-methods" target="_blank"><strong>here</strong></a>)</div>
-    <br/>
-
-    <div><strong>Step 2. </strong>Paste your OpenAI Key (Get it <a href="https://platform.openai.com/account/api-keys" target="_blank""><strong>here</strong></a> )</div>
+    <div class="centered"><strong>Note: </strong>Click on all links below first so you don't lose popup!</div>
+    <div style="padding-bottom:5px"><strong>Step 0: </strong>See Costs: <a href="https://fallacy.review/pricing" id="credit-card-link"><strong>here</strong><a/></div>
+    <div><strong>Step 1: </strong>Ensure credit card is on OpenAI (click <a href="https://platform.openai.com/account/billing/payment-methods" id ="cost-explanation-link"><strong>here</strong></a>)</div>
+    <div class="centered"><strong>Step 2. </strong>Paste your OpenAI Key (Create it <a href="https://platform.openai.com/account/api-keys" id="api-key-link""><strong>here</strong></a> )</div>
     <input type="text" id="input-data">
     <button id="submit-button">Submit</button>
     <h3 id="questions">Questions/Problems?</h3>

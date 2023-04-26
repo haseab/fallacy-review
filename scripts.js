@@ -337,7 +337,7 @@ const mainLoop = async (token, debug, localSensitivity) => {
 const trackedTweets = {};
 let isEnabled = false;
 const debug = false;
-let sensitivity = 30;
+let sensitivity = 25;
 
 // Initialize by checking the extension state in local storage or sync storage
 chrome.storage.sync.get(

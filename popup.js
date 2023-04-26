@@ -16,8 +16,22 @@ chrome.storage.sync.get(["isEnabled", "sensitivity"], function (data) {
     toggleButton.style.backgroundColor = "red";
   }
 });
+document.addEventListener("DOMContentLoaded", () => {
+  const costExplanationLink = document.getElementById("cost-explanation-link");
+  const creditLink = document.getElementById("credit-card-link");
+  const apiKeyLink = document.getElementById("api-key-link");
+  costExplanationLink.addEventListener("click", () => {
+    chrome.tabs.create({ url: costExplanationLink.href, active: false });
+  });
+  creditLink.addEventListener("click", () => {
+    chrome.tabs.create({ url: creditLink.href, active: false });
+  });
+  apiKeyLink.addEventListener("click", () => {
+    chrome.tabs.create({ url: apiKeyLink.href, active: false });
+  });
+});
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
   let toggleButton = document.getElementById("toggleButton");
   let sensitivitySlider = document.getElementById("sensitivity-slider");
   isEnabled = true ? toggleButton.textContent === "Turn Off" : false;
