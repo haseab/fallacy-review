@@ -23,6 +23,20 @@ const openAiRequest = async (mainMessageList, token) => {
     return data["choices"][0]["message"]["content"];
   } catch (error) {
     console.log(error);
+    if (
+      window.confirm(
+        `IMPORTANT MESSAGE FROM fallacy.review chrome extension:
+
+      No Payment Method Detected on OpenAI account.
+
+      Press OK to be redirected to the OpenAI Payment Method page`
+      )
+    ) {
+      window.location.href =
+        "https://platform.openai.com/account/billing/payment-methods";
+    }
+
+    return;
   }
 };
 
@@ -53,8 +67,8 @@ const deepFallacyCheck = async (
   debugPrint(debug, prompt);
 
   mainMessageList.push({ role: "user", content: prompt });
-
   const flaggedString = await openAiRequest(mainMessageList, token);
+
   mainMessageList.push({ role: "assistant", content: flaggedString });
   debugPrint(debug, "deepFallacyCheck - flaggedString:");
   debugPrint(debug, flaggedString);
@@ -120,8 +134,12 @@ Grade each tweet on a scale of 0 to 100% (with increments of 5%) for flawed reas
     { role: "user", content: prompt },
   ];
   // return data;
-
   const rankingsString = await openAiRequest(mainMessageList, token);
+
+  if (!rankingsString) {
+    return;
+  }
+
   debugPrint(debug, "quickFallacyCheck - rankingsString:");
   debugPrint(debug, rankingsString);
   const rankingsObject = stringToObject(rankingsString, ",");
@@ -336,7 +354,7 @@ const mainLoop = async (token, debug, localSensitivity) => {
 
 const trackedTweets = {};
 let isEnabled = false;
-const debug = false;
+const debug = true;
 let sensitivity = 25;
 
 // Initialize by checking the extension state in local storage or sync storage

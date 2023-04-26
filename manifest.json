@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Fallacy Review",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Automatically highlight logical fallacies on Twitter",
   "permissions": ["storage"],
   "content_scripts": [
